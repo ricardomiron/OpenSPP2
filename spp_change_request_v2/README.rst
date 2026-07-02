@@ -752,22 +752,22 @@ Methods available for override on detail models (all inherited from
 Related fields available on all detail models (from
 ``spp.cr.detail.base``):
 
-+--------------------------+-----------+------------------------------------------------------------+
-| Field                    | Type      | Source                                                     |
-+==========================+===========+============================================================+
-| ``change_request_id``    | Many2one  | Direct link to parent CR                                   |
-+--------------------------+-----------+------------------------------------------------------------+
-| ``registrant_id``        | Many2one  | ``change_request_id.registrant_id``                        |
-+--------------------------+-----------+------------------------------------------------------------+
-| ``approval_state``       | Selection | ``change_request_id.approval_state``                       |
-+--------------------------+-----------+------------------------------------------------------------+
-| ``is_applied``           | Boolean   | ``change_request_id.is_applied``                           |
-+--------------------------+-----------+------------------------------------------------------------+
-| ``use_dynamic_approval`` | Boolean   | ``change_request_id.request_type_id.use_dynamic_approval`` |
-+--------------------------+-----------+------------------------------------------------------------+
-| ``field_to_modify``      | Selection | Dynamic field selector (populated by                       |
-|                          |           | ``_get_field_to_modify_selection``)                        |
-+--------------------------+-----------+------------------------------------------------------------+
++----------------------------+-----------+------------------------------------------------------------+
+| Field                      | Type      | Source                                                     |
++============================+===========+============================================================+
+| ``change_request_id``      | Many2one  | Direct link to parent CR                                   |
++----------------------------+-----------+------------------------------------------------------------+
+| ``registrant_id``          | Many2one  | ``change_request_id.registrant_id``                        |
++----------------------------+-----------+------------------------------------------------------------+
+| ``approval_state``         | Selection | ``change_request_id.approval_state``                       |
++----------------------------+-----------+------------------------------------------------------------+
+| ``is_applied``             | Boolean   | ``change_request_id.is_applied``                           |
++----------------------------+-----------+------------------------------------------------------------+
+| ``use_dynamic_approval``   | Boolean   | ``change_request_id.request_type_id.use_dynamic_approval`` |
++----------------------------+-----------+------------------------------------------------------------+
+| ``field_to_modify``        | Selection | Dynamic field selector (populated by                       |
+|                            |           | ``_get_field_to_modify_selection``)                        |
++----------------------------+-----------+------------------------------------------------------------+
 
 CR Type Fields Reference
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -852,6 +852,18 @@ Before declaring a new CR type complete:
 
 Changelog
 =========
+
+19.0.2.0.8
+~~~~~~~~~~
+
+- fix(security): add per-model record rules to the CR detail models
+  (``spp.cr.detail.*``) enforcing parent change-request ownership, plus
+  the parent's area filter. Detail models are separate tables that do
+  not inherit the ``spp.change.request`` record rules, so a
+  low-privilege CR user could previously read/write detail rows of
+  change requests they do not own (e.g. re-point ``assign_program``'s
+  ``program_id``) directly via RPC. A completeness test guards against a
+  future detail model shipping without a rule.
 
 19.0.2.0.7
 ~~~~~~~~~~

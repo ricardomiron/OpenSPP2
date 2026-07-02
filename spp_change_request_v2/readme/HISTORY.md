@@ -1,3 +1,7 @@
+### 19.0.2.0.8
+
+- fix(security): add per-model record rules to the CR detail models (`spp.cr.detail.*`) enforcing parent change-request ownership, plus the parent's area filter. Detail models are separate tables that do not inherit the `spp.change.request` record rules, so a low-privilege CR user could previously read/write detail rows of change requests they do not own (e.g. re-point `assign_program`'s `program_id`) directly via RPC. A completeness test guards against a future detail model shipping without a rule.
+
 ### 19.0.2.0.7
 
 - fix(security): align CR Requestor / CR Local Validator / CR HQ Validator roles with the OP#951 menu audit — replace the `spp_registry.group_registry_read` (Tier-3, no menu) link with `spp_registry.group_registry_viewer` so these roles see the Registry menu; add `spp_hazard.group_hazard_viewer` so they retain Hazard visibility once the menu root is gated. Adds `spp_hazard` to module dependencies.
