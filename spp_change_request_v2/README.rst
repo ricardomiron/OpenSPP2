@@ -752,22 +752,22 @@ Methods available for override on detail models (all inherited from
 Related fields available on all detail models (from
 ``spp.cr.detail.base``):
 
-+--------------------------+-----------+------------------------------------------------------------+
-| Field                    | Type      | Source                                                     |
-+==========================+===========+============================================================+
-| ``change_request_id``    | Many2one  | Direct link to parent CR                                   |
-+--------------------------+-----------+------------------------------------------------------------+
-| ``registrant_id``        | Many2one  | ``change_request_id.registrant_id``                        |
-+--------------------------+-----------+------------------------------------------------------------+
-| ``approval_state``       | Selection | ``change_request_id.approval_state``                       |
-+--------------------------+-----------+------------------------------------------------------------+
-| ``is_applied``           | Boolean   | ``change_request_id.is_applied``                           |
-+--------------------------+-----------+------------------------------------------------------------+
-| ``use_dynamic_approval`` | Boolean   | ``change_request_id.request_type_id.use_dynamic_approval`` |
-+--------------------------+-----------+------------------------------------------------------------+
-| ``field_to_modify``      | Selection | Dynamic field selector (populated by                       |
-|                          |           | ``_get_field_to_modify_selection``)                        |
-+--------------------------+-----------+------------------------------------------------------------+
++----------------------------+-----------+------------------------------------------------------------+
+| Field                      | Type      | Source                                                     |
++============================+===========+============================================================+
+| ``change_request_id``      | Many2one  | Direct link to parent CR                                   |
++----------------------------+-----------+------------------------------------------------------------+
+| ``registrant_id``          | Many2one  | ``change_request_id.registrant_id``                        |
++----------------------------+-----------+------------------------------------------------------------+
+| ``approval_state``         | Selection | ``change_request_id.approval_state``                       |
++----------------------------+-----------+------------------------------------------------------------+
+| ``is_applied``             | Boolean   | ``change_request_id.is_applied``                           |
++----------------------------+-----------+------------------------------------------------------------+
+| ``use_dynamic_approval``   | Boolean   | ``change_request_id.request_type_id.use_dynamic_approval`` |
++----------------------------+-----------+------------------------------------------------------------+
+| ``field_to_modify``        | Selection | Dynamic field selector (populated by                       |
+|                            |           | ``_get_field_to_modify_selection``)                        |
++----------------------------+-----------+------------------------------------------------------------+
 
 CR Type Fields Reference
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -852,6 +852,17 @@ Before declaring a new CR type complete:
 
 Changelog
 =========
+
+19.0.2.0.8
+~~~~~~~~~~
+
+- fix(security): for dynamic-approval CR types, the ``field_mapping``
+  apply strategy now writes only the routed/approved field, and the
+  proposed change is frozen once submitted (selected field, mapped field
+  values, and the detail record pointer). Previously a user could route
+  a low-risk field to a weak approval and smuggle changes to other
+  mapped fields — or swap the field/value/detail after routing — so
+  unapproved changes reached the registrant.
 
 19.0.2.0.7
 ~~~~~~~~~~

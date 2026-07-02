@@ -1,3 +1,7 @@
+### 19.0.2.0.8
+
+- fix(security): for dynamic-approval CR types, the `field_mapping` apply strategy now writes only the routed/approved field, and the proposed change is frozen once submitted (selected field, mapped field values, and the detail record pointer). Previously a user could route a low-risk field to a weak approval and smuggle changes to other mapped fields — or swap the field/value/detail after routing — so unapproved changes reached the registrant.
+
 ### 19.0.2.0.7
 
 - fix(security): align CR Requestor / CR Local Validator / CR HQ Validator roles with the OP#951 menu audit — replace the `spp_registry.group_registry_read` (Tier-3, no menu) link with `spp_registry.group_registry_viewer` so these roles see the Registry menu; add `spp_hazard.group_hazard_viewer` so they retain Hazard visibility once the menu root is gated. Adds `spp_hazard` to module dependencies.
