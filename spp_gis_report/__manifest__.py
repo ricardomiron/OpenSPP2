@@ -1,6 +1,6 @@
 {
     "name": "OpenSPP GIS Reports",
-    "version": "19.0.2.0.1",
+    "version": "19.0.2.1.0",
     "category": "OpenSPP",
     "summary": "Geographic visualization and reporting for social protection data",
     "author": "OpenSPP.org, OpenSPP",
@@ -48,7 +48,6 @@
             "spp_gis_report/static/src/css/gis_report.css",
         ],
     },
-    "post_init_hook": "_migrate_boolean_disaggregation",
     "installable": True,
     "application": False,
     "auto_install": False,
