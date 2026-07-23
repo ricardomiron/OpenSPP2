@@ -1,4 +1,5 @@
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class SPPCRDetailAssignProgram(models.Model):
@@ -34,6 +35,38 @@ class SPPCRDetailAssignProgram(models.Model):
         string="Created Membership",
         readonly=True,
     )
+
+    @api.constrains("program_id")
+    def _check_program_access(self):
+        """Reject a program the selecting user cannot access.
+
+        The `program_id` domain only constrains the UI; a raw ORM/RPC write can
+        point it at an arbitrary program. Since the apply strategy runs under
+        `sudo` (spp.change.request._do_apply), an inaccessible program would
+        otherwise be assigned - and its name leaked via preview - bypassing
+        program record rules and multi-company scope. Enforce access here, in
+        the writing user's own context, so the stored value can only ever be a
+        program that user may target.
+
+        Two checks, because neither alone is sufficient:
+        - `search()` applies the user's record rules (area/registrant scope,
+          etc.), so a program hidden by those rules returns empty and is
+          rejected.
+        - an explicit `company_id in env.companies` guard enforces multi-company
+          scope directly, independent of whether the global company `ir.rule` is
+          evaluated in the current write context (it is not always), so a
+          cross-company program is rejected deterministically.
+        """
+        for rec in self:
+            program = rec.program_id
+            if not program:
+                continue
+            # `or` short-circuits: if the record is not visible, program.company_id
+            # is not read (avoids an AccessError on a rule-hidden record).
+            if not self.env["spp.program"].search([("id", "=", program.id)]) or (
+                program.company_id and program.company_id not in self.env.companies
+            ):
+                raise ValidationError(_("You do not have access to the selected program."))
 
     @api.depends("registrant_id", "registrant_id.is_group")
     def _compute_registrant_target_type(self):
