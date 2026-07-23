@@ -79,29 +79,45 @@ class TestAssignProgramAccess(CRTestCase):
                 ],
             }
         )
+        # Make the cr_user's own partner a registrant so change requests can be
+        # created with it. Using it as the registrant models "the CR user's own
+        # change request" and keeps these tests robust to detail-ownership record
+        # rules (PR #261) that scope detail write to CRs the user owns/created.
+        cls.cr_user_registrant = cls.cr_user.partner_id
+        cls.cr_user_registrant.write({"is_registrant": True, "is_group": False})
 
-    def _as_cr_user(self, records):
-        """Return `records` in the cr_user's env, scoped to company A only —
-        mirroring a real company-A session, whose allowed companies are limited
-        to the ones the user belongs to."""
-        return records.with_user(self.cr_user).with_context(allowed_company_ids=[self.company_a.id])
+    def _cr_user_env(self, model):
+        """`model` in the cr_user's env, scoped to company A only — mirroring a
+        real company-A session, whose allowed companies are limited to the ones
+        the user belongs to."""
+        return self.env[model].with_user(self.cr_user).with_context(allowed_company_ids=[self.company_a.id])
 
-    def _make_detail(self, registrant):
-        cr = self.CR.create({"request_type_id": self.cr_type.id, "registrant_id": registrant.id})
-        return cr.get_detail()
+    def _make_cr(self):
+        """Create a CR as admin (CR-name sequence generation needs privileged
+        access) with the cr_user's own partner as registrant, so a detail write
+        as cr_user is allowed both today and once PR #261's ownership rule lands.
+        Returns the CR (admin env)."""
+        return self.CR.create({"request_type_id": self.cr_type.id, "registrant_id": self.cr_user_registrant.id})
+
+    def _make_cr_and_detail(self):
+        """Return (cr, detail) with the detail bound to the cr_user's context —
+        the program_id write (what the constraint guards) then runs as cr_user."""
+        cr = self._make_cr()
+        detail = cr.get_detail()
+        return cr, detail.with_user(self.cr_user).with_context(allowed_company_ids=[self.company_a.id])
 
     def test_reject_cross_company_program(self):
-        detail = self._make_detail(self.test_individual)
+        _cr, detail = self._make_cr_and_detail()
         with self.assertRaises(ValidationError):
-            self._as_cr_user(detail).write({"program_id": self.program_cross_company.id})
+            detail.write({"program_id": self.program_cross_company.id})
 
     def test_reject_cross_company_program_on_create(self):
         # The constraint must also fire when the program is set at create time.
         # Details are created lazily, so create one directly (do not call
         # get_detail first, which would auto-create the single detail).
-        cr = self.CR.create({"request_type_id": self.cr_type.id, "registrant_id": self.test_individual.id})
+        cr = self._make_cr()
         with self.assertRaises(ValidationError):
-            self._as_cr_user(self.env["spp.cr.detail.assign_program"]).create(
+            self._cr_user_env("spp.cr.detail.assign_program").create(
                 {
                     "change_request_id": cr.id,
                     "program_id": self.program_cross_company.id,
@@ -109,6 +125,16 @@ class TestAssignProgramAccess(CRTestCase):
             )
 
     def test_allow_visible_program(self):
-        detail = self._make_detail(self.test_individual)
-        self._as_cr_user(detail).write({"program_id": self.program_visible.id})
+        _cr, detail = self._make_cr_and_detail()
+        detail.write({"program_id": self.program_visible.id})
         self.assertEqual(detail.program_id, self.program_visible)
+
+    def test_allow_shared_program(self):
+        # A company-shared program (company_id = False) is in no company's
+        # exclusive scope and must remain selectable.
+        shared = self.Program.create(
+            {"name": "Shared Individual Program", "target_type": "individual", "company_id": False}
+        )
+        _cr, detail = self._make_cr_and_detail()
+        detail.write({"program_id": shared.id})
+        self.assertEqual(detail.program_id, shared)

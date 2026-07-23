@@ -22,7 +22,17 @@ class SPPCRApplyAssignProgram(models.AbstractModel):
     _description = "CR Apply: Assign to Program"
 
     def validate(self, change_request):
-        """Validate the CR can be applied. Raises UserError on any failure."""
+        """Validate the CR can be applied. Raises UserError on any failure.
+
+        Note: this runs under ``sudo`` (see ``spp.change.request._do_apply``),
+        so it does NOT re-check the caller's access to ``program_id``. That
+        access is enforced when the program is selected, by
+        ``spp.cr.detail.assign_program._check_program_access`` (a write-time
+        constraint in the user's own context). If a new code path ever sets
+        ``detail.program_id`` under sudo (e.g. a prefill mapping), it must
+        perform its own access check - the sudo apply here trusts the stored
+        value.
+        """
         detail = change_request.get_detail()
         if not detail:
             raise UserError(_("No detail record found for this change request."))

@@ -49,13 +49,15 @@ class SPPCRDetailAssignProgram(models.Model):
         program that user may target.
 
         Two checks, because neither alone is sufficient:
-        - `search()` applies the user's record rules (area/registrant scope,
-          etc.), so a program hidden by those rules returns empty and is
-          rejected.
+        - `search()` requires the program to be visible to the user, enforcing
+          any record rule on `spp.program` (and rejecting a stale/deleted id).
         - an explicit `company_id in env.companies` guard enforces multi-company
-          scope directly, independent of whether the global company `ir.rule` is
-          evaluated in the current write context (it is not always), so a
-          cross-company program is rejected deterministically.
+          scope directly. This is load-bearing, not mere defense in depth: the
+          global multi-company `ir.rule` on `spp.program` is NOT reliably
+          applied to the search in this write/constraint context (verified by
+          test - a company-A user's search still returns a company-B program),
+          so relying on `search()` alone would let a cross-company program
+          through. The explicit check rejects it deterministically.
         """
         for rec in self:
             program = rec.program_id
