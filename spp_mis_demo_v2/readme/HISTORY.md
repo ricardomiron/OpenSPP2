@@ -1,3 +1,7 @@
+### 19.0.2.1.4
+
+- fix(security): archive the seven default-credential MIS demo users (`demo_local_registrar`, `demo_global_registrar`, `demo_cr_local_validator`, `demo_cr_hq_validator`, `demo_program_manager`, `demo_program_validator`, `demo_cycle_approver`, shared password `demo`) on a production install; the `post_init_hook` now composes demo-variable activation with archiving, and the users stay active only when demo data is enabled. Also drop `Production/Stable` (this is a demo-only bundle).
+
 ### 19.0.2.1.3
 
 - fix: PHL story registrants map to the curated PSGC p-code area external IDs introduced by the re-landed spp_demo geodata (`STORY_AREA_MAP` still referenced the removed named IDs, silently dropping area assignments).
