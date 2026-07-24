@@ -853,6 +853,20 @@ Before declaring a new CR type complete:
 Changelog
 =========
 
+19.0.3.0.3
+~~~~~~~~~~
+
+- fix(security): the CR Requestor, CR Local Validator, and CR HQ
+  Validator roles no longer carry the Tier-2
+  ``spp_registry.group_registry_viewer`` group, which gates the
+  standalone Registry Search portal menu and exposed a broad
+  registrant-PII enumeration surface. They now use the Tier-3
+  ``spp_registry.group_registry_read`` group instead, preserving the
+  registrant read a change request needs (same read ACLs, also provided
+  through the ``group_cr_*`` chain) without the Registry app menu.
+  Includes a migration that re-points the roles and re-syncs
+  already-assigned users on upgrade.
+
 19.0.3.0.0
 ~~~~~~~~~~
 

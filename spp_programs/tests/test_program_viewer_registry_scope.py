@@ -44,17 +44,14 @@ class TestProgramViewerRegistryScope(TransactionCase):
                 "value": "PV-123",
             }
         )
-        cls.phone = cls.env["spp.phone.number"].create(
-            {"partner_id": cls.registrant.id, "phone_no": "09170000000"}
-        )
+        cls.phone = cls.env["spp.phone.number"].create({"partner_id": cls.registrant.id, "phone_no": "09170000000"})
 
     def test_program_viewer_lacks_tier2_registry_viewer(self):
         """The role must not carry group_registry_viewer (gates the Registry
         Search portal menu)."""
         self.assertFalse(
             self.user.has_group("spp_registry.group_registry_viewer"),
-            "Program Viewer must not have the Tier-2 registry viewer group "
-            "(it gates the registry search portal menu)",
+            "Program Viewer must not have the Tier-2 registry viewer group (it gates the registry search portal menu)",
         )
 
     def test_program_viewer_keeps_registrant_read(self):

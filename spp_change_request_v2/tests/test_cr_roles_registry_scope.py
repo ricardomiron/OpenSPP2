@@ -31,17 +31,11 @@ class TestCRRolesRegistryScope(TransactionCase):
                 "value": "CR-123",
             }
         )
-        cls.phone = cls.env["spp.phone.number"].create(
-            {"partner_id": cls.registrant.id, "phone_no": "09180000000"}
-        )
+        cls.phone = cls.env["spp.phone.number"].create({"partner_id": cls.registrant.id, "phone_no": "09180000000"})
 
     def _user_with_role(self, role_xmlid, login):
-        user = self.env["res.users"].create(
-            {"name": login, "login": login, "email": f"{login}@example.com"}
-        )
-        self.env["res.users.role.line"].create(
-            {"user_id": user.id, "role_id": self.env.ref(role_xmlid).id}
-        )
+        user = self.env["res.users"].create({"name": login, "login": login, "email": f"{login}@example.com"})
+        self.env["res.users.role.line"].create({"user_id": user.id, "role_id": self.env.ref(role_xmlid).id})
         user.set_groups_from_roles()
         return user
 
@@ -50,8 +44,7 @@ class TestCRRolesRegistryScope(TransactionCase):
             user = self._user_with_role(xmlid, f"crscope_{xmlid.split('.')[-1]}")
             self.assertFalse(
                 user.has_group("spp_registry.group_registry_viewer"),
-                f"{xmlid} must not carry the Tier-2 registry viewer group "
-                "(it gates the registry search portal menu)",
+                f"{xmlid} must not carry the Tier-2 registry viewer group (it gates the registry search portal menu)",
             )
 
     def test_cr_roles_keep_registrant_read(self):
