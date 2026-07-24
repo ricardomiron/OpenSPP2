@@ -1,12 +1,15 @@
 ### 19.0.3.0.3
 
-- fix(security): derive the dynamic-approval field used by conflict and
-  duplicate detection from the detail's validated ``field_to_modify`` selection
-  instead of the user-writable ``selected_field_name``. ``selected_field_name``
-  was only view-readonly, so a change-request user could write it to a field
-  outside a rule's ``conflict_fields`` to clear a field-scoped conflict and
-  submit without the configured override path; the detection now ignores the
-  writable copy and is skipped for non-dynamic-approval request types.
+- fix(security): scope dynamic-approval conflict and duplicate detection to the
+  fields that actually differ from the registrant (the changes the apply
+  strategy will write), instead of a user-writable label. Both
+  ``selected_field_name`` (view-readonly only) and the detail's
+  ``field_to_modify`` are writable by a change-request user and do not constrain
+  what apply changes, so a user could point them at a field outside a rule's
+  ``conflict_fields`` to clear a field-scoped conflict and submit without the
+  configured override path. Detection now derives the changed fields
+  server-side from the detail-vs-registrant diff and ignores those labels; it
+  is skipped for non-dynamic-approval request types.
 
 ### 19.0.3.0.0
 

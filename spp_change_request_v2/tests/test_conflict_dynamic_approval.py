@@ -70,6 +70,19 @@ class TestConflictDynamicApproval(TransactionCase):
                 "enable_conflict_detection": True,
             }
         )
+        # Field-mapping definitions: which detail fields map to which registrant
+        # fields. Conflict/duplicate detection derives the "actually changed"
+        # fields from these (detail value vs registrant), so a field_mapping
+        # type needs them — same-named here (given_name -> given_name, etc.).
+        cls.dynamic_cr_type.write(
+            {
+                "apply_mapping_ids": [
+                    Command.create({"source_field": "given_name", "target_field": "given_name"}),
+                    Command.create({"source_field": "family_name", "target_field": "family_name"}),
+                    Command.create({"source_field": "phone", "target_field": "phone"}),
+                ],
+            }
+        )
 
         # Field-scope conflict rule: checks given_name, family_name
         cls.field_rule = cls.env["spp.cr.conflict.rule"].create(
@@ -530,6 +543,46 @@ class TestConflictDynamicApproval(TransactionCase):
             cr_a,
             cr_b.conflicting_cr_ids,
             "selected_field_name must not affect conflict detection for non-dynamic CR types.",
+        )
+
+    def test_mislabeled_field_to_modify_cannot_bypass_conflict(self):
+        """Labelling field_to_modify as an unchanged field must not bypass the
+        conflict on the field actually changed. field_to_modify is user-writable
+        and does not constrain apply (field_mapping applies every changed field),
+        so detection must scope to what actually differs from the registrant."""
+        cr_a = self._create_dynamic_cr()
+        cr_a.get_detail().write({"field_to_modify": "given_name", "given_name": "NewGivenA"})
+        cr_a._run_conflict_checks()
+
+        # cr_b really changes given_name (a conflict field) but labels the CR as
+        # modifying phone (unchanged — still the registrant's prefilled value).
+        cr_b = self._create_dynamic_cr()
+        cr_b.get_detail().write({"field_to_modify": "phone", "given_name": "NewGivenB"})
+        cr_b._run_conflict_checks()
+
+        self.assertEqual(
+            cr_b.conflict_status,
+            "warning",
+            "A real change to a conflict field must be detected regardless of field_to_modify.",
+        )
+        self.assertIn(cr_a, cr_b.conflicting_cr_ids)
+
+    def test_mislabeled_candidate_still_detected_as_conflict(self):
+        """A prior CR that mislabels field_to_modify while actually changing a
+        conflict field must still be found as a conflicting candidate."""
+        # cr_a really changes given_name but labels field_to_modify = phone.
+        cr_a = self._create_dynamic_cr()
+        cr_a.get_detail().write({"field_to_modify": "phone", "given_name": "MislabeledGivenA"})
+        cr_a._run_conflict_checks()
+
+        cr_b = self._create_dynamic_cr()
+        cr_b.get_detail().write({"field_to_modify": "given_name", "given_name": "NewGivenB"})
+        cr_b._run_conflict_checks()
+
+        self.assertIn(
+            cr_a,
+            cr_b.conflicting_cr_ids,
+            "A candidate that actually changed the conflict field must be detected even if mislabeled.",
         )
 
     def test_writing_selected_field_name_cannot_bypass_duplicate(self):
