@@ -1,3 +1,7 @@
+### 19.0.3.0.3
+
+- fix(security): the CR Requestor, CR Local Validator, and CR HQ Validator roles no longer carry the Tier-2 `spp_registry.group_registry_viewer` group, which gates the standalone Registry Search portal menu and exposed a broad registrant-PII enumeration surface. They now use the Tier-3 `spp_registry.group_registry_read` group instead, preserving the registrant read a change request needs (same read ACLs, also provided through the `group_cr_*` chain) without the Registry app menu. Includes a migration that re-points the roles and re-syncs already-assigned users on upgrade.
+
 ### 19.0.3.0.0
 
 - feat(change_request): redesign the group/membership CR flows (#242) — Create Group (#876), Add Member now searches an existing member (#871), Remove Member first-page/review cleanup (#872), Change Head of Household via a per-member role table (#873), and Split Household as a relational member move with single-head validation (#877). Review pages render the real data as tables / detail sections.

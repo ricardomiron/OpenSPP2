@@ -1,3 +1,7 @@
+### 19.0.2.2.2
+
+- fix(security): the Program Viewer role no longer carries the Tier-2 `spp_registry.group_registry_viewer` group, which gates the standalone Registry Search portal menu and exposed a broad registrant-PII enumeration surface to a read-only program role. It now uses the Tier-3 `spp_registry.group_registry_read` group instead, preserving the registrant read needed for program cross-references (same read ACLs, defined in `spp_base_common`) without the Registry app menu. Includes a migration that re-points the role and re-syncs already-assigned users on upgrade.
+
 ### 19.0.2.1.3
 
 - fix(security): align Program Viewer / Validator / Cycle Approver roles with the OP#951 menu audit — Program Viewer additionally gets `group_registry_viewer` + `group_approval_viewer` (read-only Registry + Approvals access); all three program roles get `group_hazard_viewer` + `group_gis_report_user` so they retain Hazard / GIS Reports visibility once those menu roots are gated. Adds `spp_hazard` and `spp_gis_report` to module dependencies.
