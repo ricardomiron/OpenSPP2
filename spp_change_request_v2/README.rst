@@ -853,6 +853,18 @@ Before declaring a new CR type complete:
 Changelog
 =========
 
+19.0.3.0.3
+~~~~~~~~~~
+
+- fix(security): derive the dynamic-approval field used by conflict and
+  duplicate detection from the detail's validated ``field_to_modify``
+  selection instead of the user-writable ``selected_field_name``.
+  ``selected_field_name`` was only view-readonly, so a change-request
+  user could write it to a field outside a rule's ``conflict_fields`` to
+  clear a field-scoped conflict and submit without the configured
+  override path; the detection now ignores the writable copy and is
+  skipped for non-dynamic-approval request types.
+
 19.0.3.0.0
 ~~~~~~~~~~
 
