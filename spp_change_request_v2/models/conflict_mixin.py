@@ -291,12 +291,34 @@ class SPPCRConflictMixin(models.AbstractModel):
 
         return list(set(member_ids))
 
+    def _effective_selected_field(self):
+        """Return the dynamic-approval field actually being changed.
+
+        This is derived from the detail's ``field_to_modify`` — a Selection
+        validated against the allowed fields — NOT from the CR's
+        ``selected_field_name`` Char, which is only view-readonly and is
+        directly writable by any user with write access to their own change
+        request. Trusting the writable copy let a user re-point it to a field
+        outside a rule's ``conflict_fields`` to escape field-scoped conflict
+        and duplicate detection; deriving from the validated source closes that.
+
+        Returns the field name for dynamic-approval CR types, or ``""`` for
+        non-dynamic types (where field scoping does not apply and the full
+        ``conflict_fields`` set must always be considered).
+        """
+        self.ensure_one()
+        if not self.request_type_id.use_dynamic_approval:
+            return ""
+        detail = self.get_detail()
+        return (detail.field_to_modify or "") if detail else ""
+
     def _filter_by_field_conflicts(self, candidates, rule):
         """Filter candidate CRs by checking if they modify the same fields.
 
-        For dynamic-approval CRs (where selected_field_name is set), only the
-        selected field is treated as a proposed change. Prefilled fields from
-        the registrant are ignored for conflict purposes.
+        For dynamic-approval CRs, only the selected field (derived server-side
+        from the detail's validated ``field_to_modify``) is treated as a
+        proposed change. Prefilled fields from the registrant are ignored for
+        conflict purposes.
         """
         self.ensure_one()
 
@@ -309,7 +331,7 @@ class SPPCRConflictMixin(models.AbstractModel):
             return self.env["spp.change.request"]
 
         # Dynamic approval: only the selected field is a proposed change
-        my_selected = self.selected_field_name
+        my_selected = self._effective_selected_field()
         if my_selected:
             if my_selected not in conflict_fields:
                 return self.env["spp.change.request"]
@@ -325,7 +347,7 @@ class SPPCRConflictMixin(models.AbstractModel):
                 continue
 
             # Determine candidate's effective fields
-            candidate_selected = candidate.selected_field_name
+            candidate_selected = candidate._effective_selected_field()
             if candidate_selected:
                 # Both use dynamic approval: conflict only if same field
                 if my_selected and candidate_selected != my_selected:
@@ -439,9 +461,9 @@ class SPPCRConflictMixin(models.AbstractModel):
     def _calculate_similarity(self, other_cr, config):
         """Calculate similarity percentage between this CR and another.
 
-        For dynamic-approval CRs (where selected_field_name is set), only the
-        selected field is compared. Prefilled fields are ignored to prevent
-        inflated similarity scores.
+        For dynamic-approval CRs, only the selected field (derived server-side
+        from the detail's validated ``field_to_modify``) is compared. Prefilled
+        fields are ignored to prevent inflated similarity scores.
 
         Args:
             other_cr: Another spp.change.request record
@@ -459,8 +481,8 @@ class SPPCRConflictMixin(models.AbstractModel):
             return 0.0
 
         # Dynamic approval: compare only the selected field
-        my_selected = self.selected_field_name
-        other_selected = other_cr.selected_field_name
+        my_selected = self._effective_selected_field()
+        other_selected = other_cr._effective_selected_field()
         if my_selected and other_selected:
             # Different fields selected = not duplicates
             if my_selected != other_selected:

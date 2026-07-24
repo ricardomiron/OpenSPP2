@@ -1,3 +1,13 @@
+### 19.0.3.0.3
+
+- fix(security): derive the dynamic-approval field used by conflict and
+  duplicate detection from the detail's validated ``field_to_modify`` selection
+  instead of the user-writable ``selected_field_name``. ``selected_field_name``
+  was only view-readonly, so a change-request user could write it to a field
+  outside a rule's ``conflict_fields`` to clear a field-scoped conflict and
+  submit without the configured override path; the detection now ignores the
+  writable copy and is skipped for non-dynamic-approval request types.
+
 ### 19.0.3.0.0
 
 - feat(change_request): redesign the group/membership CR flows (#242) — Create Group (#876), Add Member now searches an existing member (#871), Remove Member first-page/review cleanup (#872), Change Head of Household via a per-member role table (#873), and Split Household as a relational member move with single-head validation (#877). Review pages render the real data as tables / detail sections.
