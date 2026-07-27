@@ -545,7 +545,9 @@ Only for development or testing purpose, do not use in production.</p>
 <tt class="docutils literal">demo_cycle_approver</tt>, shared password <tt class="docutils literal">demo</tt>) on a production
 install; the <tt class="docutils literal">post_init_hook</tt> now composes demo-variable activation
 with archiving, and the users stay active only when demo data is
-enabled. Also drop <tt class="docutils literal">Production/Stable</tt> (this is a demo-only bundle).</li>
+enabled. A migration archives them the same way on upgrade from a
+released version (the install hook does not run on <tt class="docutils literal"><span class="pre">-u</span></tt>). Also drop
+<tt class="docutils literal">Production/Stable</tt> (this is a demo-only bundle).</li>
 </ul>
 </div>
 <div class="section" id="section-2">

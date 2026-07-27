@@ -175,7 +175,9 @@ Changelog
   ``demo_cycle_approver``, shared password ``demo``) on a production
   install; the ``post_init_hook`` now composes demo-variable activation
   with archiving, and the users stay active only when demo data is
-  enabled. Also drop ``Production/Stable`` (this is a demo-only bundle).
+  enabled. A migration archives them the same way on upgrade from a
+  released version (the install hook does not run on ``-u``). Also drop
+  ``Production/Stable`` (this is a demo-only bundle).
 
 19.0.2.1.3
 ~~~~~~~~~~
