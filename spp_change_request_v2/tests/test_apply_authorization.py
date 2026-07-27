@@ -83,6 +83,15 @@ class TestApplyAuthorization(TransactionCase):
         self.assertFalse(cr.is_applied)
         self.assertFalse(self.membership.ended_date, "membership must be untouched when apply is denied")
 
+    def test_validator_cannot_apply_directly(self):
+        """A validator (not a manager) is also blocked from calling action_apply
+        directly. Validators cause an apply only by approving (auto-apply via
+        _on_approve), not by invoking the manager-only public entrypoint."""
+        cr = self._make_approved_cr()
+        with self.assertRaises(AccessError):
+            cr.with_user(self.cr_validator).action_apply()
+        self.assertFalse(cr.is_applied)
+
     def test_manager_can_apply(self):
         """A cr_manager may apply (regression)."""
         cr = self._make_approved_cr()
