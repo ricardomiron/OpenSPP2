@@ -81,9 +81,7 @@ class TestApplyAuthorization(TransactionCase):
         with self.assertRaises(AccessError):
             cr.with_user(self.cr_user).action_apply()
         self.assertFalse(cr.is_applied)
-        self.assertFalse(
-            self.membership.ended_date, "membership must be untouched when apply is denied"
-        )
+        self.assertFalse(self.membership.ended_date, "membership must be untouched when apply is denied")
 
     def test_manager_can_apply(self):
         """A cr_manager may apply (regression)."""
