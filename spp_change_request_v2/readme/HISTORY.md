@@ -1,3 +1,17 @@
+### 19.0.3.0.4
+
+- fix(security): enforce manager authorization server-side when applying a
+  change request. ``action_apply()`` runs the apply strategy under sudo (which
+  can write ``spp.group.membership`` and other models CR roles cannot), and the
+  manager restriction previously existed only on the review button — but Odoo
+  object methods are callable over RPC, so a ``group_cr_user`` could invoke
+  ``action_apply()`` directly on an approved change request and drive superuser
+  membership writes (e.g. remove/transfer member). The public ``action_apply()``
+  now requires ``group_cr_manager`` (or a superuser/sudo context); the apply
+  mechanism was moved to an internal, non-RPC ``_apply_change_request()`` that
+  auto-apply-on-approve continues to use so validator-driven approvals still
+  apply.
+
 ### 19.0.3.0.0
 
 - feat(change_request): redesign the group/membership CR flows (#242) — Create Group (#876), Add Member now searches an existing member (#871), Remove Member first-page/review cleanup (#872), Change Head of Household via a per-member role table (#873), and Split Household as a relational member move with single-head validation (#877). Review pages render the real data as tables / detail sections.
